@@ -7,13 +7,12 @@ const ApiKeyDisplay: React.FC = () => {
         Google Maps API Key Missing
       </h1>
       <p className="text-center">
-        Please create a{" "}
-        <code className="bg-gray-200 p-1 rounded">.env.local</code> file in the
-        root of your project.
+        Please create a <code className=" p-1 rounded">.env.local</code> file in
+        the root of your project.
       </p>
       <p className="text-center mt-2">
         Add your Google Maps API Key to it like this: <br />
-        <code className="bg-gray-200 p-1 rounded">
+        <code className=" p-1 rounded">
           NEXT_PUBLIC_GOOGLE_MAPS_KEY=YOUR_ACTUAL_API_KEY
         </code>
         .

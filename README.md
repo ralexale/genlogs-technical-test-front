@@ -22,8 +22,15 @@ The project follows a feature-first structure, with components, hooks, types, an
     SearchForm.tsx    # Component for city input fields and search button
   /hooks
     useMapLogic.ts   # Custom hook to manage map state and logic
+  /lib
+    custom-fetch.ts  # Utility for making API requests
+  /services
+    carriers.service.ts # Service for fetching carrier data
   /types
     index.ts         # TypeScript type definitions (e.g., Carrier)
+  /ui
+    Button.tsx       # Reusable button component
+    FormField.tsx    # Reusable form field component with Autocomplete
   /utils
     constants.ts     # Application constants (e.g., API libraries, map styles)
 .env.local.example   # Example environment file for API keys
@@ -46,10 +53,10 @@ tsconfig.json        # TypeScript configuration
 
 ### 2. Carrier Search
 
-- On clicking "Search", the `handleSearch` function is triggered.
-- It first validates if both city inputs are provided.
-- **Mock Carrier Data**: Currently, the carrier data is mocked. Based on predefined city pairs (New York - Washington D.C., San Francisco - Los Angeles), a static list of carriers is displayed. For other city pairs, a default list of carriers is shown.
-- The `showMap` state is set to `true` to render the map section.
+- On clicking "Search", the `handleSearch` function (managed by `useHandleSearchForm` which uses `react-hook-form`) is triggered.
+- It first validates if both city inputs are provided using `react-hook-form` and a Zod schema.
+- **Carrier Data Fetching**: Carrier data is fetched from a backend API using `src/services/carriers.service.ts`, which utilizes a `src/lib/custom-fetch.ts` helper for making the request.
+- The `showMap` state is set to `true` to render the map section upon successful carrier search.
 
 ### 3. Map Display and Directions
 
@@ -89,17 +96,21 @@ tsconfig.json        # TypeScript configuration
 
 ### 5. UI Components
 
-- **`SearchForm.tsx`**: Contains the input fields with `Autocomplete` and the "Search" button. Handles basic input changes and triggers the search.
+- **`SearchForm.tsx`**: Contains the input fields with `Autocomplete` and the "Search" button. Form state and validation are managed by `react-hook-form`. Handles input changes and triggers the search.
 - **`MapDisplay.tsx`**: Responsible for rendering the `GoogleMap`, `DirectionsService`, and `DirectionsRenderer`.
-- **`CarrierList.tsx`**: Displays the list of (currently mocked) carriers.
+- **`CarrierList.tsx`**: Displays the list of carriers fetched from the API.
 - **`ApiKeyDisplay.tsx`**: Shown when the Google Maps API key is not configured correctly.
+- **`src/ui` components**: This directory houses reusable UI elements like:
+  - **`FormField.tsx`**: A component that wraps an input field, integrating Google Maps `Autocomplete` functionality and `react-hook-form` for state management and validation.
+  - **`Button.tsx`**: A general-purpose button component.
 
 ## Technical Details
 
-- **Framework**: Next.js 14 (App Router)
+- **Framework**: Next.js 15 (App Router)
 - **Language**: TypeScript
 - **Mapping Library**: `@react-google-maps/api`
 - **Styling**: Tailwind CSS
+- **Form Management**: `react-hook-form` (with Zod for schema validation)
 - **Linting/Formatting**: ESLint, Prettier (implicitly via ESLint config)
 
 ## Setup and Running the Project
@@ -126,6 +137,7 @@ tsconfig.json        # TypeScript configuration
 
     ```
     NEXT_PUBLIC_GOOGLE_MAPS_KEY=YOUR_ACTUAL_GOOGLE_MAPS_API_KEY
+    NEXT_PUBLIC_API_URL=YOUR_BACKEND_API_URL
     ```
 
     - **Important**: You need to enable the **Maps JavaScript API** and **Places API** for this key in your Google Cloud Console.
@@ -151,16 +163,18 @@ tsconfig.json        # TypeScript configuration
 
 2.  **User Interaction in `SearchForm.tsx`**:
 
-    - User types in "From" and "To" city fields. `Autocomplete` provides suggestions.
+    - User types in "From" and "To" city fields. `FormField` components (utilizing `Autocomplete`) provide suggestions.
+    - Form inputs are registered with `react-hook-form` via the `useHandleSearchForm` hook.
     - `onLoadFrom`/`onLoadTo` capture the Autocomplete instances.
     - `onPlaceChangedFrom`/`onPlaceChangedTo` update `fromCity`/`toCity` state when a selection is made. This also resets `directionsResponse` and hides the map (`setShowMap(false)`).
-    - User clicks "Search". `handleSearch` (from `useMapLogic`) is called.
+    - User clicks "Search". `onSubmit` function from `useHandleSearchForm` is called, which in turn calls `handleSearch` (from `useMapLogic`) after successful validation by `react-hook-form`.
 
 3.  **`handleSearch` in `useMapLogic.ts`**:
 
     - Sets `showMap(true)`.
     - Clears previous `directionsResponse`.
-    - **Mock Carrier Logic**: Determines which set of carriers to display based on `fromCity` and `toCity`. Updates the `carriers` state.
+    - **Carrier Fetching**: Calls `getCarriers` from `src/services/carriers.service.ts` with `fromCity` and `toCity`.
+    - Updates the `carriers` state with the response from the API.
 
 4.  **`MapDisplay.tsx` Reacts**:
 
@@ -184,7 +198,7 @@ tsconfig.json        # TypeScript configuration
 7.  **`CarrierList.tsx`**:
     - Displays the carriers from the `carriers` state, updated by `handleSearch`.
 
-This flow allows for a reactive interface where the map and carrier list update based on user input and API responses, with state and complex logic managed by the `useMapLogic` hook.
+This flow allows for a reactive interface where the map and carrier list update based on user input and API responses, with state and complex logic managed by the `useMapLogic` hook and form handling streamlined by `react-hook-form`.
 
 ## Learn More
 

@@ -1,21 +1,40 @@
 import { useState, useRef, useCallback } from "react";
 import { Carrier } from "../types/carrier.types";
 import getCarriers from "@/services/carriers.service";
+import { ROUTE_STYLES } from "@/utils/constants";
 
 interface FormValues {
   fromCity: string;
   toCity: string;
 }
 
+interface RouteDetail {
+  description: string;
+  colorName: string;
+}
+
+const getColorName = (hexColor: string): string => {
+  switch (hexColor.toUpperCase()) {
+    case "#4A90E2":
+      return "Blue";
+    case "#FF6347":
+      return "Red";
+    case "#32CD32":
+      return "Green";
+    default:
+      return "Default Color";
+  }
+};
+
 export const useMapLogic = () => {
-  const [carriers, setCarriers] = useState<Carrier[]>([]);
   const [directionsResponse, setDirectionsResponse] =
     useState<google.maps.DirectionsResult | null>(null);
   const [showMap, setShowMap] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
-
-  const [currentFromCity, setCurrentFromCity] = useState<string>("");
-  const [currentToCity, setCurrentToCity] = useState<string>("");
+  const [carriers, setCarriers] = useState<Carrier[]>([]);
+  const [currentFromCity, setCurrentFromCity] = useState<string | null>(null);
+  const [currentToCity, setCurrentToCity] = useState<string | null>(null);
+  const [routeInfo, setRouteInfo] = useState<RouteDetail[]>([]);
 
   const autocompleteFromRef = useRef<google.maps.places.Autocomplete | null>(
     null
@@ -23,8 +42,8 @@ export const useMapLogic = () => {
   const autocompleteToRef = useRef<google.maps.places.Autocomplete | null>(
     null
   );
-  const fromInputRef = useRef<HTMLInputElement | null>(null);
-  const toInputRef = useRef<HTMLInputElement | null>(null);
+  const fromInputRef = useRef<HTMLInputElement>(null);
+  const toInputRef = useRef<HTMLInputElement>(null);
 
   const onLoadFrom = (autocomplete: google.maps.places.Autocomplete) => {
     autocompleteFromRef.current = autocomplete;
@@ -32,6 +51,12 @@ export const useMapLogic = () => {
 
   const onLoadTo = (autocomplete: google.maps.places.Autocomplete) => {
     autocompleteToRef.current = autocomplete;
+  };
+
+  const resetStatements = () => {
+    setSearchError(null);
+    setCarriers([]);
+    setDirectionsResponse(null);
   };
 
   const onPlaceChangedFrom = useCallback((): string | null => {
@@ -67,12 +92,10 @@ export const useMapLogic = () => {
 
   const handleSearch = useCallback(async (data: FormValues) => {
     const { fromCity, toCity } = data;
-    setSearchError(null);
-    setCarriers([]);
+    resetStatements();
     setCurrentFromCity(fromCity);
     setCurrentToCity(toCity);
     setShowMap(true);
-    setDirectionsResponse(null);
 
     try {
       const processedFromCity = fromCity.split(",")[0].trim();
@@ -102,20 +125,27 @@ export const useMapLogic = () => {
       if (status === "OK" && response) {
         console.log("Directions response:", response);
         setDirectionsResponse(response);
+        setShowMap(true);
         setSearchError(null);
 
-        if (response.routes.length > 1) {
-          console.log(
-            `Found ${response.routes.length} routes. Displaying the primary one.`
-          );
+        const newRouteInfo: RouteDetail[] = [];
+        if (response.routes.length > 0) {
           response.routes.forEach((route, index) => {
-            console.log(
-              `Route ${index + 1}: ${route.summary}, Duration: ${
-                route.legs[0]?.duration?.text
-              }, Distance: ${route.legs[0]?.distance?.text}`
-            );
+            const leg = route.legs[0];
+            const routeStyle = ROUTE_STYLES[index] || ROUTE_STYLES[0];
+            const colorName = getColorName(routeStyle.strokeColor);
+
+            if (leg?.duration?.text && leg?.distance?.text) {
+              newRouteInfo.push({
+                description: `Route ${index + 1}: ${route.summary}, Duration: ${
+                  leg.duration.text
+                }, Distance: ${leg.distance.text}`,
+                colorName: colorName,
+              });
+            }
           });
         }
+        setRouteInfo(newRouteInfo);
       } else {
         console.error(`Error fetching directions ${status}`, response);
         setSearchError(
@@ -148,5 +178,8 @@ export const useMapLogic = () => {
     directionsCallback,
     currentFromCity,
     currentToCity,
+    setCurrentFromCity,
+    setCurrentToCity,
+    routeInfo,
   };
 };

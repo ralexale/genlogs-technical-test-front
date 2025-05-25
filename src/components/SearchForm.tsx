@@ -19,7 +19,7 @@ interface SearchFormProps {
   searchError: string | null;
 }
 
-const SearchForm: React.FC<SearchFormProps> = ({
+const SearchForm = ({
   fromInputRef,
   toInputRef,
   onLoadFrom,
@@ -30,7 +30,7 @@ const SearchForm: React.FC<SearchFormProps> = ({
   setDirectionsResponse,
   setShowMap,
   searchError,
-}) => {
+}: SearchFormProps) => {
   const { control, handleSubmit, onSubmit, setValue, errors, isValid } =
     useHandleSearchForm({ handleSearch });
 

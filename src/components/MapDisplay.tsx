@@ -55,7 +55,7 @@ const MapDisplay: React.FC<MapDisplayProps> = React.memo(
                   directions={directionsResponse}
                   routeIndex={index}
                   options={{
-                    suppressMarkers: index > 0, // Show markers only for the primary route
+                    suppressMarkers: index > 0,
                     polylineOptions: {
                       strokeColor: routeStyle.strokeColor,
                       strokeWeight: routeStyle.strokeWeight,

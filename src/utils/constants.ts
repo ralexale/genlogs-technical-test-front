@@ -4,7 +4,7 @@ export const LIBRARIES_TO_LOAD: Libraries = ["places"];
 
 export const MAP_CONTAINER_STYLE = {
   width: "100%",
-  height: "400px",
+  height: "500px",
 };
 
 export const MAP_CENTER = {
