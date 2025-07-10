@@ -63,7 +63,7 @@ export async function customFetch<T>(
 
     // Try to parse response as JSON
     const contentType = response.headers.get("content-type");
-    if (contentType && contentType.includes("application/json")) {
+    if (contentType?.includes("application/json")) {
       return await response.json();
     }
 
